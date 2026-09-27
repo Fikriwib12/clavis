@@ -1,0 +1,29 @@
+<?php
+
+namespace App\Http\Resources;
+
+use App\Models\Team;
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
+
+/**
+ * @mixin Team
+ */
+class TeamResource extends JsonResource
+{
+    /**
+     * Transform the resource into an array.
+     *
+     * @return array<string, mixed>
+     */
+    public function toArray(Request $request): array
+    {
+        return [
+            'id' => $this->id,
+            'team_name' => $this->team_name,
+            'captain' => TeamMemberResource::make($this->whenLoaded('captain')),
+            'member' => TeamMemberResource::make($this->whenLoaded('member')),
+            'registered_at' => $this->created_at,
+        ];
+    }
+}

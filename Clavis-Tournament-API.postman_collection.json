@@ -1,0 +1,522 @@
+{
+    "info": {
+        "_postman_id": "5f7c2d1e-8a4b-4c3d-9e6f-1a2b3c4d5e6f",
+        "name": "Clavis Tournament API",
+        "description": "REST API pendaftaran turnamen tim (1 tim = 2 orang: kapten + anggota).\n\nAutentikasi: **Bearer Token**. Jalankan request **2. Login** terlebih dahulu; token otomatis disimpan ke variabel koleksi `access_token` dan dipakai oleh request yang membutuhkan autentikasi (Authorization diwarisi dari level koleksi).\n\nVariabel:\n- `base_url` — alamat aplikasi, default `http://127.0.0.1:8000` (`php artisan serve`). Sesuaikan jika memakai domain lain.\n- `access_token` — diisi otomatis oleh request Login, dikosongkan oleh request Logout.\n\nSemua request mengirim header `Accept: application/json`. Error validasi dikembalikan dengan status 422, tanpa token/token tidak valid 401, dan pendaftaran tim ganda 409.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "auth": {
+        "type": "bearer",
+        "bearer": [
+            {
+                "key": "token",
+                "value": "{{access_token}}",
+                "type": "string"
+            }
+        ]
+    },
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://127.0.0.1:8000",
+            "type": "string"
+        },
+        {
+            "key": "access_token",
+            "value": "",
+            "type": "string"
+        }
+    ],
+    "item": [
+        {
+            "name": "1. Register Candidate (Buat Akun)",
+            "request": {
+                "auth": {
+                    "type": "noauth"
+                },
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Accept",
+                        "value": "application/json"
+                    },
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"name\": \"Budi Santoso\",\n    \"username\": \"budi12345\",\n    \"email\": \"budi@example.com\",\n    \"password\": \"rahasia123\",\n    \"phone\": \"081234567890\"\n}",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
+                },
+                "url": {
+                    "raw": "{{base_url}}/api/v1/register",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api",
+                        "v1",
+                        "register"
+                    ]
+                },
+                "description": "Membuat akun kandidat (publik, tanpa token).\n\nAturan validasi:\n- `name`: wajib, hanya huruf dan spasi, maks. 100 karakter\n- `username`: wajib, 6-15 karakter, hanya huruf dan angka, unik\n- `email`: wajib, format email, unik\n- `password`: wajib, 8-16 karakter\n- `phone`: wajib, angka 7-14 digit"
+            },
+            "response": [
+                {
+                    "name": "201 Created",
+                    "originalRequest": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/register",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "register"
+                            ]
+                        }
+                    },
+                    "status": "Created",
+                    "code": 201,
+                    "_postman_previewlanguage": "json",
+                    "header": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ],
+                    "body": "{\n    \"data\": {\n        \"id\": 1,\n        \"name\": \"Budi Santoso\",\n        \"username\": \"budi12345\",\n        \"email\": \"budi@example.com\",\n        \"phone\": \"081234567890\",\n        \"created_at\": \"2026-09-27T10:09:37.000000Z\"\n    },\n    \"message\": \"Registrasi akun berhasil. Silakan login untuk mendapatkan token.\"\n}"
+                },
+                {
+                    "name": "422 Unprocessable Content",
+                    "originalRequest": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/register",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "register"
+                            ]
+                        }
+                    },
+                    "status": "Unprocessable Content",
+                    "code": 422,
+                    "_postman_previewlanguage": "json",
+                    "header": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ],
+                    "body": "{\n    \"message\": \"Nama pengguna harus terdiri dari 6-15 karakter.\",\n    \"errors\": {\n        \"username\": [\n            \"Nama pengguna harus terdiri dari 6-15 karakter.\"\n        ]\n    }\n}"
+                }
+            ]
+        },
+        {
+            "name": "2. Login (Dapatkan Token)",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                            "if (pm.response.code === 200) {",
+                            "    pm.collectionVariables.set('access_token', pm.response.json().data.access_token);",
+                            "}",
+                            "",
+                            "pm.test('Login berhasil dan token tersimpan', () => {",
+                            "    pm.response.to.have.status(200);",
+                            "    pm.expect(pm.collectionVariables.get('access_token')).to.not.be.empty;",
+                            "});"
+                        ]
+                    }
+                }
+            ],
+            "request": {
+                "auth": {
+                    "type": "noauth"
+                },
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Accept",
+                        "value": "application/json"
+                    },
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"username\": \"budi12345\",\n    \"password\": \"rahasia123\"\n}",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
+                },
+                "url": {
+                    "raw": "{{base_url}}/api/v1/login",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api",
+                        "v1",
+                        "login"
+                    ]
+                },
+                "description": "Menukar username & password dengan Bearer token. Token otomatis disimpan ke variabel koleksi `access_token`.\n\nSetiap login menerbitkan token baru dan membatalkan token sebelumnya. Setelah 5 kali gagal, login dikunci selama 60 detik."
+            },
+            "response": [
+                {
+                    "name": "200 OK",
+                    "originalRequest": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/login",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "login"
+                            ]
+                        }
+                    },
+                    "status": "OK",
+                    "code": 200,
+                    "_postman_previewlanguage": "json",
+                    "header": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ],
+                    "body": "{\n    \"message\": \"Login berhasil.\",\n    \"data\": {\n        \"token_type\": \"Bearer\",\n        \"access_token\": \"JjK79uJYnxKjVvvCLgXXmdtBVqX2o1IeENsxQWMuhv9Fq5IgeUPbdwcSw1Rt\"\n    }\n}"
+                },
+                {
+                    "name": "422 Kata sandi salah",
+                    "originalRequest": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/login",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "login"
+                            ]
+                        }
+                    },
+                    "status": "Unprocessable Content",
+                    "code": 422,
+                    "_postman_previewlanguage": "json",
+                    "header": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ],
+                    "body": "{\n    \"message\": \"Kata sandi yang Anda masukkan salah.\",\n    \"errors\": {\n        \"password\": [\n            \"Kata sandi yang Anda masukkan salah.\"\n        ]\n    }\n}"
+                }
+            ]
+        },
+        {
+            "name": "3. Get Candidate Data",
+            "request": {
+                "method": "GET",
+                "header": [
+                    {
+                        "key": "Accept",
+                        "value": "application/json"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/api/v1/candidate",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api",
+                        "v1",
+                        "candidate"
+                    ]
+                },
+                "description": "Data detail kandidat yang sedang login (Bearer token wajib). Setelah tim didaftarkan, field `team` berisi nama tim, kapten, dan anggota; sebelumnya bernilai `null`."
+            },
+            "response": [
+                {
+                    "name": "200 OK (sudah mendaftarkan tim)",
+                    "originalRequest": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/candidate",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "candidate"
+                            ]
+                        }
+                    },
+                    "status": "OK",
+                    "code": 200,
+                    "_postman_previewlanguage": "json",
+                    "header": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ],
+                    "body": "{\n    \"data\": {\n        \"id\": 1,\n        \"name\": \"Budi Santoso\",\n        \"username\": \"budi12345\",\n        \"email\": \"budi@example.com\",\n        \"phone\": \"081234567890\",\n        \"created_at\": \"2026-09-27T10:09:37.000000Z\",\n        \"team\": {\n            \"id\": 1,\n            \"team_name\": \"Garuda_01\",\n            \"captain\": {\n                \"name\": \"Budi Santoso\",\n                \"phone\": \"081234567890\",\n                \"gender\": \"Man\"\n            },\n            \"member\": {\n                \"name\": \"Siti Aminah\",\n                \"phone\": \"081298765432\",\n                \"gender\": \"Woman\"\n            },\n            \"registered_at\": \"2026-09-27T10:09:38.000000Z\"\n        }\n    }\n}"
+                },
+                {
+                    "name": "401 Tanpa token",
+                    "originalRequest": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/candidate",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "candidate"
+                            ]
+                        }
+                    },
+                    "status": "Unauthorized",
+                    "code": 401,
+                    "_postman_previewlanguage": "json",
+                    "header": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ],
+                    "body": "{\n    \"message\": \"Unauthenticated.\"\n}"
+                }
+            ]
+        },
+        {
+            "name": "4. Post Team Registration (Daftarkan Tim)",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Accept",
+                        "value": "application/json"
+                    },
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"team_name\": \"Garuda_01\",\n    \"captain\": {\n        \"gender\": \"Man\"\n    },\n    \"member\": {\n        \"name\": \"Siti Aminah\",\n        \"phone\": \"081298765432\",\n        \"gender\": \"Woman\"\n    }\n}",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
+                },
+                "url": {
+                    "raw": "{{base_url}}/api/v1/candidate/team",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api",
+                        "v1",
+                        "candidate",
+                        "team"
+                    ]
+                },
+                "description": "Mendaftarkan tim kandidat yang sedang login (Bearer token wajib). Kandidat otomatis menjadi kapten: nama & nomor telepon kapten diambil dari akun, bukan dari body request.\n\nAturan validasi:\n- `team_name`: wajib, 4-15 karakter, hanya huruf, angka, dan `_`, unik\n- `captain.gender` / `member.gender`: `Man` atau `Woman`\n- `member.name`: wajib, hanya huruf dan spasi, unik (belum terdaftar di tim lain), tidak sama dengan nama kapten\n- `member.phone`: wajib, angka 7-14 digit\n\nSatu akun hanya bisa mendaftarkan satu tim (409 jika sudah terdaftar)."
+            },
+            "response": [
+                {
+                    "name": "201 Created",
+                    "originalRequest": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/candidate/team",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "candidate",
+                                "team"
+                            ]
+                        }
+                    },
+                    "status": "Created",
+                    "code": 201,
+                    "_postman_previewlanguage": "json",
+                    "header": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ],
+                    "body": "{\n    \"data\": {\n        \"id\": 1,\n        \"team_name\": \"Garuda_01\",\n        \"captain\": {\n            \"name\": \"Budi Santoso\",\n            \"phone\": \"081234567890\",\n            \"gender\": \"Man\"\n        },\n        \"member\": {\n            \"name\": \"Siti Aminah\",\n            \"phone\": \"081298765432\",\n            \"gender\": \"Woman\"\n        },\n        \"registered_at\": \"2026-09-27T10:09:38.000000Z\"\n    },\n    \"message\": \"Tim berhasil didaftarkan.\"\n}"
+                },
+                {
+                    "name": "409 Tim sudah terdaftar",
+                    "originalRequest": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/candidate/team",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "candidate",
+                                "team"
+                            ]
+                        }
+                    },
+                    "status": "Conflict",
+                    "code": 409,
+                    "_postman_previewlanguage": "json",
+                    "header": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ],
+                    "body": "{\n    \"message\": \"Tim Anda sudah terdaftar pada turnamen ini.\"\n}"
+                },
+                {
+                    "name": "422 Unprocessable Content",
+                    "originalRequest": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/candidate/team",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "candidate",
+                                "team"
+                            ]
+                        }
+                    },
+                    "status": "Unprocessable Content",
+                    "code": 422,
+                    "_postman_previewlanguage": "json",
+                    "header": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ],
+                    "body": "{\n    \"message\": \"Nama tim harus terdiri dari 4-15 karakter. (and 3 more errors)\",\n    \"errors\": {\n        \"team_name\": [\n            \"Nama tim harus terdiri dari 4-15 karakter.\"\n        ],\n        \"captain.gender\": [\n            \"Jenis kelamin kapten yang dipilih tidak valid.\"\n        ],\n        \"member.phone\": [\n            \"Nomor telepon anggota harus berupa angka dengan panjang 7-14 digit.\"\n        ],\n        \"member.name\": [\n            \"Nama anggota tidak boleh sama dengan nama kapten.\"\n        ]\n    }\n}"
+                }
+            ]
+        },
+        {
+            "name": "5. Logout (Cabut Token)",
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                            "if (pm.response.code === 200) {",
+                            "    pm.collectionVariables.set('access_token', '');",
+                            "}"
+                        ]
+                    }
+                }
+            ],
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Accept",
+                        "value": "application/json"
+                    }
+                ],
+                "url": {
+                    "raw": "{{base_url}}/api/v1/logout",
+                    "host": [
+                        "{{base_url}}"
+                    ],
+                    "path": [
+                        "api",
+                        "v1",
+                        "logout"
+                    ]
+                },
+                "description": "Mencabut token yang sedang dipakai. Setelah logout, request dengan token tersebut mendapat 401."
+            },
+            "response": [
+                {
+                    "name": "200 OK",
+                    "originalRequest": {
+                        "method": "POST",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/logout",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "logout"
+                            ]
+                        }
+                    },
+                    "status": "OK",
+                    "code": 200,
+                    "_postman_previewlanguage": "json",
+                    "header": [
+                        {
+                            "key": "Content-Type",
+                            "value": "application/json"
+                        }
+                    ],
+                    "body": "{\n    \"message\": \"Logout berhasil. Token sudah tidak berlaku.\"\n}"
+                }
+            ]
+        }
+    ]
+}
