@@ -1,58 +1,149 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Clavis Tournament Registration
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Website pendaftaran turnamen game berbasis tim untuk **Web Developer Test Clavis**. Satu tim terdiri dari dua orang: kapten tim (pemilik akun yang mendaftarkan tim) dan satu anggota.
 
-## About Laravel
+**Demo:** [https://taskfikri.infinityfree.io/login](https://taskfikri.infinityfree.io/login)
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Di demo, buat akun baru lewat halaman **Daftar di sini**, lalu masuk dan daftarkan tim.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Fitur
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+| Halaman | Aturan |
+| --- | --- |
+| **Login** | Username 6–15 karakter (hanya huruf dan angka), kata sandi 8–16 karakter, username harus terdaftar di database. Setelah valid, session dibuat dan user diarahkan ke pendaftaran tim. Tersedia "Ingat saya", dan login dikunci 60 detik setelah 5 kali gagal. |
+| **Daftar akun** | Nama (huruf dan spasi), nama pengguna unik (huruf dan angka), email, kata sandi 8–16 karakter, nomor telepon (angka). |
+| **Lupa kata sandi** | Tautan reset kata sandi dikirim ke email akun. |
+| **Pendaftaran tim** | Hanya untuk user yang sudah login. Nama tim 4–15 karakter (huruf, angka, `_`) dan unik. Nama dan telepon kapten terisi otomatis dari session. Nama pemain hanya huruf dan spasi serta unik. Telepon 7–14 digit angka. Jenis kelamin `Man` atau `Woman`. Tersedia popup aturan & regulasi turnamen. |
+| **Pendaftaran berhasil** | Menampilkan pesan selamat. User yang sudah mendaftarkan tim langsung diarahkan ke halaman ini setelah login, bukan ke form pendaftaran. |
+| **Logout** | Keluar dan menghapus seluruh session. |
 
-## Learning Laravel
+Semua validasi dijalankan di **server** (Form Request Laravel) dan di **client** (JavaScript), dengan pesan berbahasa Indonesia yang sama.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Teknologi
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- **Backend:** Laravel 13 (PHP 8.3+)
+- **Database:** MySQL
+- **Frontend:** Blade, Tailwind CSS 4, dan Vite; validasi client-side dengan JavaScript tanpa library
+- **Testing:** Pest
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+## Struktur Database
 
-## Agentic Development
+```mermaid
+erDiagram
+    users ||--o| teams : "mendaftarkan (sebagai kapten)"
+    teams ||--|{ team_members : "memiliki (kapten + anggota)"
+    team_roles ||--o{ team_members : "menentukan peran"
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+    users {
+        bigint id PK
+        varchar name
+        varchar username "unique"
+        varchar email "unique"
+        varchar password
+        varchar phone
+        varchar api_token "unique, hash SHA-256"
+    }
 
-```bash
-composer require laravel/boost --dev
+    teams {
+        bigint id PK
+        varchar team_name "unique"
+        bigint user_id FK "unique"
+    }
 
-php artisan boost:install
+    team_roles {
+        bigint id PK
+        varchar role_name "Captain / Member"
+    }
+
+    team_members {
+        bigint id PK
+        bigint team_id FK
+        bigint team_role_id FK
+        varchar name "unique"
+        varchar phone
+        enum gender "Man / Woman"
+    }
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+- Satu akun hanya bisa mendaftarkan satu tim, dan pemilik akun menjadi kaptennya.
+- Setiap tim berisi tepat dua pemain: satu `Captain` dan satu `Member`.
+- Nama pemain unik di seluruh turnamen, sehingga satu orang hanya bisa terdaftar di satu tim.
 
-## Contributing
+## Menjalankan di Lokal
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Kebutuhan: PHP 8.3+, Composer, Node.js, dan MySQL.
 
-## Code of Conduct
+```bash
+composer install
+npm install
+npm run build
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+cp .env.example .env
+php artisan key:generate
+```
 
-## Security Vulnerabilities
+Atur koneksi database di `.env`:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=clavis-test
+DB_USERNAME=root
+DB_PASSWORD=
+```
 
-## License
+Lalu jalankan migrasi dan server:
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```bash
+php artisan migrate
+php artisan db:seed   # opsional: membuat akun demo
+php artisan serve
+```
+
+Buka `http://127.0.0.1:8000`. Seeder membuat dua akun demo dengan kata sandi `password`:
+
+- `testuser`: belum mendaftarkan tim
+- `registered1`: sudah mendaftarkan tim `Demo_Team`
+
+## REST API
+
+Base URL: `/api/v1`. Autentikasi memakai **Bearer token** yang didapat dari endpoint login.
+
+| Method | Endpoint | Token | Keterangan |
+| --- | --- | --- | --- |
+| `POST` | `/api/v1/register` | – | Membuat akun kandidat |
+| `POST` | `/api/v1/login` | – | Menukar username dan kata sandi dengan Bearer token |
+| `GET` | `/api/v1/candidate` | ✓ | Data detail kandidat beserta timnya (`team: null` jika belum mendaftar) |
+| `POST` | `/api/v1/candidate/team` | ✓ | Mendaftarkan tim; kapten diambil dari akun pemilik token |
+| `POST` | `/api/v1/logout` | ✓ | Mencabut token |
+
+Kode status yang dipakai:
+
+- `401`: token tidak ada atau tidak valid
+- `409`: kandidat sudah pernah mendaftarkan tim
+- `422`: validasi gagal
+
+Contoh body `POST /api/v1/candidate/team`:
+
+```json
+{
+    "team_name": "Garuda_01",
+    "captain": { "gender": "Man" },
+    "member": { "name": "Siti Aminah", "phone": "081298765432", "gender": "Woman" }
+}
+```
+
+### Postman
+
+Import [`Clavis-Tournament-API.postman_collection.json`](Clavis-Tournament-API.postman_collection.json) ke Postman, lalu sesuaikan variabel `base_url` (default `http://127.0.0.1:8000`). Setelah request **2. Login** dijalankan, token otomatis tersimpan dan dipakai oleh request lain.
+
+> **Catatan:** hosting demo (InfinityFree) memasang proteksi anti-bot yang mewajibkan JavaScript dan cookie. Akibatnya, request dari Postman ke URL demo biasanya dibalas halaman HTML, bukan JSON. Jalankan API di lokal untuk mencoba koleksi Postman.
+
+## Testing
+
+```bash
+php artisan test --compact
+```
+
+Test mencakup login, registrasi, reset kata sandi, pendaftaran tim (validasi, keamanan, dan redirect), serta seluruh endpoint REST API.
